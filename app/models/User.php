@@ -1,12 +1,13 @@
 <?php
-use app\models\Model;
+namespace app\models;
 
 class User extends Model
 {
     public $id;
-    public $name;
-    public $login;
-    public $password;
+    public $name = "";
+    public $login = "";
+    public $password = "";
+    public $is_admin = "";
 
 
     /**

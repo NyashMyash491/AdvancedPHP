@@ -1,15 +1,61 @@
 <?php
 namespace app\services;
 
-class DB implements IDB
+use app\traits\SingletonTrait;
+
+class DB
 {
-    public function find($sql)
+    use SingletonTrait;
+
+    private $config = [
+        'driver' => 'mysql',
+        'host' => 'localhost',
+        'db' => 'gbphp',
+        'charset' => 'UTF8',
+        'login' => 'root',
+        'password' => 'root'];
+
+    private $connection;
+
+    private function getConnection()
     {
-        return 'find ' . $sql;
+        if (empty($this->connection))
+        {
+            $this->connection = new \PDO($this->getSdn() , $this->config['login'], $this->config['password']);
+
+            $this
+                ->connection
+                ->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
+        }
+
+        return $this->connection;
     }
 
-    public function findAll($sql)
+    private function getSdn()
     {
-        return 'findAll ' . $sql;
+        return sprintf("%s:host=%s;dbname=%s;charset=%s", $this->config['driver'], $this->config['host'], $this->config['db'], $this->config['charset']);
+    }
+
+    private function query($sql, $params = [])
+    {
+        $PDOStatement = $this->getConnection()
+            ->prepare($sql);
+        $PDOStatement->execute($params);
+        return $PDOStatement;
+    }
+
+    public function find($sql, $params = [])
+    {
+        return $this->query($sql, $params)->fetchObject(__CLASS__);
+    }
+
+    public function findAll($sql, $params = [])
+    {
+        return $this->query($sql, $params)->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
+    }
+
+    public function execute($sql, $params = [])
+    {
+        $this->query($sql, $params);
     }
 }
